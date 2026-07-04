@@ -75,7 +75,7 @@ export function AddBookForm({ onSuccess, onCancel }: AddBookFormProps) {
     try {
       // Intento primario: Google Books
       try {
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`);
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=15`);
         if (res.ok) {
           const data = await res.json();
           if (data.items && data.items.length > 0) {
@@ -83,12 +83,42 @@ export function AddBookForm({ onSuccess, onCancel }: AddBookFormProps) {
           }
         }
       } catch (googleError) {
-        console.warn('Google Books fetch falló (posible bloqueo CORS o red). Intentando OpenLibrary...', googleError);
+        console.warn('Google Books fetch falló (posible bloqueo CORS o red).', googleError);
       }
 
-      // Intento secundario (Fallback): OpenLibrary
+      // Intento secundario: Apple Books
       if (results.length === 0) {
-        const fallbackRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5`);
+        try {
+          // Buscamos en Apple Books (iTunes API) que suele tener metadatos muy actualizados de libros comerciales
+          const appleRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=ebook&limit=15`);
+          if (appleRes.ok) {
+            const appleData = await appleRes.json();
+            if (appleData.results && appleData.results.length > 0) {
+              results = appleData.results.map((doc: any) => ({
+                id: doc.trackId?.toString() || String(Math.random()),
+                volumeInfo: {
+                  title: doc.trackName,
+                  authors: doc.artistName ? [doc.artistName] : ['Autor Desconocido'],
+                  publisher: undefined,
+                  publishedDate: doc.releaseDate ? doc.releaseDate.split('T')[0] : undefined,
+                  description: doc.description,
+                  categories: doc.genres,
+                  imageLinks: {
+                    // Reemplazamos la URL de 100x100 para obtener una portada de mayor resolución (600x600)
+                    thumbnail: doc.artworkUrl100 ? doc.artworkUrl100.replace('100x100bb', '600x600bb') : undefined
+                  }
+                }
+              }));
+            }
+          }
+        } catch (appleError) {
+          console.warn('Apple Books fetch falló.', appleError);
+        }
+      }
+
+      // Intento terciario (Fallback): OpenLibrary
+      if (results.length === 0) {
+        const fallbackRes = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`);
         if (!fallbackRes.ok) throw new Error('OpenLibrary fallback failed');
         
         const fallbackData = await fallbackRes.json();
