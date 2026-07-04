@@ -6,6 +6,7 @@ import { Book as BookIcon } from 'lucide-react';
 interface BookCardProps {
   book: Book;
   index: number;
+  onClick?: (book: Book) => void;
 }
 
 const COLORS = [
