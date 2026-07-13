@@ -78,7 +78,17 @@ function getFloralGroup(book: Book, index: number, totalBooks: number) {
   };
 }
 
-export function OrganicFlower({ books, onSelectBook }: { books: Book[], onSelectBook?: (book: Book) => void }) {
+export interface OrganicFlowerProps {
+  books: Book[];
+  onSelectBook?: (book: Book) => void;
+  isNew?: boolean;
+  colorVariant?: 'default' | 'warm' | 'cool' | 'mixed';
+  stemCurve?: number;
+  stemHeight?: number;
+  scale?: number;
+}
+
+export function OrganicFlower({ books, onSelectBook, isNew = false, colorVariant = 'default', stemCurve = 0, stemHeight = 1, scale = 1 }: OrganicFlowerProps) {
   const [hoveredBook, setHoveredBook] = useState<Book | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -104,10 +114,13 @@ export function OrganicFlower({ books, onSelectBook }: { books: Book[], onSelect
 
   return (
     <>
-      <div className="relative w-full max-w-[600px] md:max-w-[700px] aspect-square mx-auto flex items-center justify-center -my-2">
+      <div 
+        className="relative w-full h-full flex items-center justify-center pointer-events-none"
+        style={{ transform: `scale(${scale})`, transformOrigin: 'bottom center' }}
+      >
         <svg
-          viewBox="0 0 600 600"
-          className="w-full h-full overflow-visible"
+          viewBox="150 150 300 450"
+          className="w-full h-full overflow-visible pointer-events-auto"
           style={{ filter: 'drop-shadow(0px 15px 25px rgba(0,0,0,0.06))' }}
         >
           <defs>
@@ -128,9 +141,10 @@ export function OrganicFlower({ books, onSelectBook }: { books: Book[], onSelect
           </defs>
 
           {/* Agrupamos toda la planta para animaciones globales */}
-          <motion.g id="plant-system" animate={{ y: currentCenterY - 300 }} transition={{ duration: 1.5, ease: "easeInOut" }}>
+          <motion.g id="plant-system" initial={isNew ? { y: currentCenterY - 300 + 50, opacity: 0 } : { y: currentCenterY - 300, opacity: 1 }} animate={{ y: currentCenterY - 300, opacity: 1 }} transition={{ duration: 1.5, ease: "easeInOut" }}>
             
-            {/* Elementos Decorativos de Fondo (Aprovechamiento del espacio) */}
+            {/* Elementos Decorativos de Fondo omitidos porque ahora están en Garden */}
+
             <g id="background-decorations" opacity="0.6">
               {/* Ramas muy tenues y elegantes a los lados */}
               <motion.path d="M120,450 Q100,300 150,150" stroke="#7B9E89" strokeWidth="1" fill="none" opacity="0.2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2.5 }} />
@@ -207,12 +221,12 @@ export function OrganicFlower({ books, onSelectBook }: { books: Book[], onSelect
             {/* Tallo Robusto y con curva orgánica sutil */}
             <g id="stem">
               <motion.path 
-                d={`M300,300 C295,380 310,450 298,520`}
+                d={`M300,300 C${295 - stemCurve * 40},380 ${310 + stemCurve * 20},450 298,520`}
                 stroke="url(#stem-grad)" 
                 strokeWidth={totalBooks <= 3 ? 5 : totalBooks <= 15 ? 8 : 12} 
                 strokeLinecap="round" 
                 fill="none"
-                initial={{ pathLength: 0, opacity: 0 }} 
+                initial={isNew ? { pathLength: 0, opacity: 0 } : { pathLength: totalBooks > 0 ? 1 : 0, opacity: totalBooks > 0 ? 1 : 0 }} 
                 animate={{ pathLength: totalBooks > 0 ? 1 : 0, opacity: totalBooks > 0 ? 1 : 0 }} 
                 transition={{ duration: 1.2, ease: "easeInOut" }}
               />

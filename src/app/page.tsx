@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { AddBookForm } from '@/features/books/components/AddBookForm';
-import { OrganicFlower } from '@/features/flower/components/OrganicFlower';
+import { Garden } from '@/features/flower/components/Garden';
 import { BookCard } from '@/features/books/components/BookCard';
 import { BookDetailsModal } from '@/features/books/components/BookDetailsModal';
 import { Input } from '@/components/ui/input';
@@ -196,10 +196,10 @@ export default function Home() {
         </header>
 
         {viewMode === 'jardin' ? (
-          <section className="w-full relative z-10 flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 mb-32">
-            <OrganicFlower books={books} onSelectBook={setSelectedBook} />
+          <section className="w-full relative z-10 flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 mb-16">
+            <Garden books={books} onSelectBook={setSelectedBook} />
             
-            <p className="font-serif text-2xl sm:text-3xl font-medium text-[#b3645c] mt-8 transition-all duration-1000 text-center drop-shadow-sm px-4">
+            <p className="font-serif text-2xl sm:text-3xl font-medium text-[#b3645c] transition-all duration-1000 text-center drop-shadow-sm px-4 mt-8">
               {getEmotionalMessage(books.length)}
             </p>
           </section>

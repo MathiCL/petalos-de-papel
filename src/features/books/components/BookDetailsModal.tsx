@@ -8,6 +8,49 @@ import { Button } from '@/components/ui/button';
 import { EditBookForm } from './EditBookForm';
 import { toast } from 'sonner';
 
+function decodeHTMLEntities(text: string) {
+  if (typeof document === 'undefined') return text;
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = text;
+  return textArea.value;
+}
+
+function SynopsisRenderer({ htmlContent }: { htmlContent: string }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  let cleanText = htmlContent
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>?/gm, '');
+    
+  cleanText = decodeHTMLEntities(cleanText).trim();
+    
+  const paragraphs = cleanText.split('\n').filter(p => p.trim() !== '');
+  
+  const charCount = cleanText.length;
+  const isLong = charCount > 350 || paragraphs.length > 3;
+
+  return (
+    <div className="flex flex-col relative">
+      <div className={`text-muted-foreground/90 text-sm leading-loose space-y-3 transition-all duration-300 ${!expanded && isLong ? 'max-h-[160px] overflow-hidden relative' : ''}`}>
+        {paragraphs.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+        {!expanded && isLong && (
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#F7F4EF] to-transparent pointer-events-none" />
+        )}
+      </div>
+      {isLong && (
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          className="text-[#ECA586] hover:text-[#d1555c] text-xs font-semibold self-start mt-3 transition-colors px-3 py-1.5 rounded-full bg-card/50 border border-[#ECA586]/30 hover:bg-[#ECA586]/10"
+        >
+          {expanded ? 'Mostrar menos' : 'Leer más...'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 interface BookDetailsModalProps {
   book: Book | null;
   isOpen: boolean;
@@ -153,10 +196,11 @@ export function BookDetailsModal({ book, isOpen, onClose, onBookUpdated }: BookD
                 {/* Sinopsis Original (si existe) */}
                 {book.description && (
                   <div className="flex flex-col mt-4">
-                    <h4 className="font-serif text-base text-muted-foreground mb-2">Sinopsis Original</h4>
-                    <p className="text-muted-foreground/80 text-xs leading-relaxed line-clamp-6 hover:line-clamp-none transition-all">
-                      {book.description}
-                    </p>
+                    <h4 className="font-serif text-base text-muted-foreground mb-3 flex items-center gap-2">
+                      <BookIcon size={14} className="text-[#ECA586]" />
+                      Sinopsis Original
+                    </h4>
+                    <SynopsisRenderer htmlContent={book.description} />
                   </div>
                 )}
                 
